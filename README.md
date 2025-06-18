@@ -26,6 +26,10 @@ This is my solution to [Fly.io's](https://fly.io) set of distributed systems cha
   ```sh
   go build -o gossip-glomers .
   ```
+
+> [!WARNING]
+> You *should* be passing the binary to maelstrom and generally shouldn't be running it alone, but I'm including the instructions for completeness.
+
 2. Run the binary:
   ```sh
   ./gossip-glomers
