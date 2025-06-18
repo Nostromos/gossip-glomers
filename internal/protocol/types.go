@@ -42,4 +42,24 @@ type ReadOK struct {
 	Messages string `json:"messages"`
 }
 
+/*
+{
+  "type": "topology",
+  "topology": {
+    "n1": ["n2", "n3"],
+    "n2": ["n1"],
+    "n3": ["n1"]
+  }
+}
+*/
 
+type Topology map[string][]string
+
+type TopologyReq struct {
+	Type     string   `json:"type"` // "topology"
+	Topology Topology `json:"topology"`
+}
+
+type TopologyOK struct {
+	Type string `json:"type"` // "topology_ok"
+}
