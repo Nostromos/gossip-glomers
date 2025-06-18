@@ -19,6 +19,7 @@ var counter int = 0 // Should probably be uint64 TODO: Why will 32bit systems bo
 
 func main() {
 	n := maelstrom.NewNode()
+	
 	messages := &queue.Safe{
 		Values: make(map[int]struct{}),
 	}
