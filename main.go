@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	// "context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -90,6 +90,19 @@ func (pq *PeerQueue) PopOne() (int, bool) {
 	return 0, false
 }
 
+func (pq *PeerQueue) Drain() []int {
+	pq.mu.Lock()
+	defer pq.mu.Unlock()
+
+	copy := make([]int, 0, len(pq.queue))
+	for k, _ := range pq.queue {
+		copy = append(copy, k)
+		delete(pq.queue, k)
+	}
+
+	return copy
+}
+
 // func (pq *PeerQueue) Clear() {
 // 	pq.mu.Lock()
 // 	defer pq.mu.Unlock()
@@ -102,21 +115,41 @@ func handlePeerQueues(node *maelstrom.Node, pending map[string]*PeerQueue) {
 
 	for range ticker.C {
 		for peerID, pq := range pending {
-			value, ok := pq.PopOne()
-			if !ok {
-				continue
-			}
-
-			msg := map[string]any{
-				"type":    "broadcast",
-				"message": value,
-			}
-
-			if _, err := node.SyncRPC(context.TODO(), peerID, msg); err != nil {
-				pq.Push(value)
-			}
+			drainAndSend(node, peerID, pq)
 		}
 	}
+}
+
+func drainAndSend(node *maelstrom.Node, peer string, pq *PeerQueue) {
+	batch := pq.Drain()
+
+	if len(batch) == 0 {
+		return
+	}
+
+	body := map[string]any{
+		"type":     "delta",
+		"messages": batch,
+	}
+
+	node.Send(peer, body)
+
+	pq.mu.Lock()
+	if pq.timer != nil {
+		pq.timer.Stop()
+	}
+
+	pq.timer = time.AfterFunc(500 * time.Millisecond, func() {
+		pq.mu.Lock()
+		for _, v := range batch {
+			pq.queue[v] = struct{}{}
+		}
+
+		pq.timer = nil
+		pq.mu.Unlock()
+	})
+
+	pq.mu.Unlock()
 }
 
 func main() {
@@ -131,7 +164,7 @@ func main() {
 		startOnce sync.Once
 	)
 
-	go handlePeerQueues(n, pending)
+	// go handlePeerQueues(n, pending)
 
 	n.Handle("echo", func(msg maelstrom.Message) error {
 		// Unmarshal the message body as an loosely-typed map.
@@ -232,6 +265,44 @@ func main() {
 		}
 
 		return n.Reply(msg, resp)
+	})
+
+	n.Handle("delta", func(msg maelstrom.Message) error {
+		var req struct {
+			Messages []int `json:"messages"`
+		}
+
+		_ = json.Unmarshal(msg.Body, &req)
+
+		for _, v := range req.Messages {
+			if messages.Add(v) {
+				for _, pq := range pending {
+					pq.Push(v)
+				}
+			}
+		}
+
+		resp := map[string]any{
+			"type": "delta_ok",
+		}
+
+		return n.Reply(msg, resp)
+	})
+
+	n.Handle("delta_ok", func(msg maelstrom.Message) error {
+		peerID := msg.Src          // Maelstrom sets the sender ID here
+    pq, ok := pending[peerID]
+    if !ok {
+        return nil               // unknown peer – ignore
+    }
+
+    pq.mu.Lock()        // delivery confirmed
+    if pq.timer != nil {
+        pq.timer.Stop()          // stop retry loop
+        pq.timer = nil
+    }
+    pq.mu.Unlock()
+    return nil
 	})
 
 	if err := n.Run(); err != nil {
