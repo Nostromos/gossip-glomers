@@ -76,7 +76,7 @@ func drainAndSend(node *maelstrom.Node, peer string, pq *Peer) {
 	if pq.Timer != nil {
 		pq.Timer.Stop()
 	}
-	pq.Timer = time.AfterFunc(200*time.Millisecond, func() {
+	pq.Timer = time.AfterFunc(100*time.Millisecond, func() {
 		pq.MU.Lock()
 		for _, v := range batch {
 			pq.Values[v] = struct{}{}
