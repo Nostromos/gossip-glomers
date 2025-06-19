@@ -1,7 +1,7 @@
 package gossip
 
 import (
-	// --- Standard Lib
+	// --- Standard Lib ---
 	"encoding/json"
 	"fmt"
 
@@ -41,36 +41,31 @@ func (s *Server) HandleBroadcast(msg maelstrom.Message) error {
 	if err := json.Unmarshal(msg.Body, &req); err != nil {
 		return err
 	}
-	msgValue := body["message"]
-	num, ok := msgValue.(float64)
-	if !ok {
-		return fmt.Errorf("message is not a number")
-	}
-	if s.Messages.Add(int(num)) {
+	if s.Messages.Add(req.Message) {
 		for _, pq := range s.Pending {
-			pq.Push(int(num))
+			pq.Push(req.Message)
 		}
 	}
-	resp := map[string]any{
-		"type": "broadcast_ok",
+	resp := protocol.BroadcastOK{
+		Type: "broadcast_ok",
 	}
 	return s.Node.Reply(msg, resp)
 }
 
 func (s *Server) HandleRead(msg maelstrom.Message) error {
-	var body map[string]any
-	if err := json.Unmarshal(msg.Body, &body); err != nil {
+	req := protocol.ReadReq{}
+	if err := json.Unmarshal(msg.Body, &req); err != nil {
 		return err
 	}
-	resp := map[string]any{
-		"type":     "read_ok",
-		"messages": s.Messages.Snapshot(),
+	resp := protocol.ReadOK{
+		Type:     "read_ok",
+		Messages: s.Messages.Snapshot(),
 	}
 	return s.Node.Reply(msg, resp)
 }
 
 func (s *Server) HandleTopology(msg maelstrom.Message) error {
-	var req map[string]any
+	req := protocol.TopologyReq{}
 	if err := json.Unmarshal(msg.Body, &req); err != nil {
 		return err
 	}
@@ -86,18 +81,17 @@ func (s *Server) HandleTopology(msg maelstrom.Message) error {
 		}
 		go queue.HandlePeerQueues(s.Node, s.Pending)
 	})
-	resp := map[string]any{
-		"type":        "topology_ok",
-		"in_reply_to": req["msg_id"],
+	resp := protocol.TopologyOK{
+		Type:        "topology_ok",
 	}
 	return s.Node.Reply(msg, resp)
 }
 
 func (s *Server) HandleDelta(msg maelstrom.Message) error {
-	var req struct {
-		Messages []int `json:"messages"`
+	req := protocol.DeltaReq{}
+	if err := json.Unmarshal(msg.Body, &req); err != nil {
+		return err
 	}
-	_ = json.Unmarshal(msg.Body, &req)
 	for _, v := range req.Messages {
 		if s.Messages.Add(v) {
 			for _, pq := range s.Pending {
@@ -105,13 +99,13 @@ func (s *Server) HandleDelta(msg maelstrom.Message) error {
 			}
 		}
 	}
-	resp := map[string]any{
-		"type": "delta_ok",
+	resp := protocol.DeltaOK{
+		Type: "delta_ok",
 	}
 	return s.Node.Reply(msg, resp)
 }
 
-func (s *Server) HandleDeltaOK(msg maelstrom.Message) error {
+func (s *Server) HandleDeltaOK(msg maelstrom.Message) error { // TODO: Much of this logic probably needs to live in PeerQueue and this needs proper typing with the DeltaOK struct.
 	peerID := msg.Src // Maelstrom sets the sender ID here
 		pq, ok := s.Pending[peerID]
 		if !ok {
