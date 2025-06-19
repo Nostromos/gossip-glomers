@@ -51,13 +51,6 @@ func (pq *Peer) Drain() []int {
 	return copy
 }
 
-// func (pq *PeerQueue) Clear() {
-// 	pq.mu.Lock()
-// 	defer pq.mu.Unlock()
-
-// 	pq.queue = make(map[int]struct{})
-// }
-
 func HandlePeerQueues(node *maelstrom.Node, pending map[string]*Peer) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 

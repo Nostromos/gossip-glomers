@@ -19,7 +19,7 @@ type GenerateReq struct {
 
 type GenerateOK struct {
 	Type string `json:"type"` // "generate_ok"
-	ID   int    `json:"id"`
+	ID   string    `json:"id"`
 }
 
 type BroadcastReq struct {
@@ -39,19 +39,8 @@ type ReadReq struct {
 
 type ReadOK struct {
 	Type     string `json:"type"` // "read_ok"
-	Messages string `json:"messages"`
+	Messages []int `json:"messages"`
 }
-
-/*
-{
-  "type": "topology",
-  "topology": {
-    "n1": ["n2", "n3"],
-    "n2": ["n1"],
-    "n3": ["n1"]
-  }
-}
-*/
 
 type Topology map[string][]string
 
@@ -62,4 +51,13 @@ type TopologyReq struct {
 
 type TopologyOK struct {
 	Type string `json:"type"` // "topology_ok"
+}
+
+type DeltaReq struct {
+	Type string `json:"type"` // "delta"
+	Messages []int `json:"messages"`
+}
+
+type DeltaOK struct {
+	Type     string `json:"type"` // "delta_ok"
 }
