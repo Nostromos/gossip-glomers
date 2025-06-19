@@ -67,20 +67,16 @@ func drainAndSend(node *maelstrom.Node, peer string, pq *Peer) {
 	if len(batch) == 0 {
 		return
 	}
-
 	body := map[string]any{
 		"type":     "delta",
 		"messages": batch,
 	}
-
 	node.Send(peer, body)
-
 	pq.MU.Lock()
 	if pq.Timer != nil {
 		pq.Timer.Stop()
 	}
-
-	pq.Timer = time.AfterFunc(500*time.Millisecond, func() {
+	pq.Timer = time.AfterFunc(200*time.Millisecond, func() {
 		pq.MU.Lock()
 		for _, v := range batch {
 			pq.Values[v] = struct{}{}
