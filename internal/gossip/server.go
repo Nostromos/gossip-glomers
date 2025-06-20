@@ -45,7 +45,7 @@ func (s *Server) HandlePeerQueues(node *maelstrom.Node, pending map[string]*queu
 }
 
 
-func (s *Server) DrainAndSend(node *maelstrom.Node, peer string, pq *Peer) {
+func (s *Server) DrainAndSend(node *maelstrom.Node, peer string, pq *queue.Peer) {
 	batch := pq.Drain()
 
 	if len(batch) == 0 {
