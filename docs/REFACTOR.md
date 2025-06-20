@@ -121,8 +121,11 @@ You drain the entire set each tick.  That works, but if the message is big it is
 Structure & Naming:
   - [x] Rename Peer → PeerQueue
   - [x] Add constructor function NewPeerQueue()
-  - [ ] Extract timer duration as configurable constant
+  - [x] Extract timer duration as configurable constant
+    - [x] Pass those values to queue operations
   - [ ] Move peer queue to gossip.Server, along with things like flushPeers
+    - [x] Move HandlePeerQueues
+    - [x] Move DrainAndSend
 
   Concurrency Safety:
   - [ ] Fix race condition in timer callback
