@@ -14,7 +14,7 @@ import (
 
 type Server struct {
 	Node     *maelstrom.Node
-	Messages *queue.Safe
+	Messages *queue.Messages
 	Pending  map[string]*queue.Peer
 	Counter  atomic.Uint64
 	initOnce sync.Once
@@ -23,12 +23,8 @@ type Server struct {
 func NewServer(n *maelstrom.Node) *Server {
 	return &Server{
 		Node: n,
-		Messages: &queue.Safe{
+		Messages: &queue.Messages{
 			Values: make(map[int]struct{})},
-		// Pending: make(map[string]*queue.Peer),
-		// `Counter` left out - automatically zero
-		// Learned that the counter doesn't need to be explicitly invoked or initialized
-		// and that the zero value for `atomic.Uint64` is already valid just be declaring
-		// it on the struct.
+		// Pending: make(map[string]*queue.Peer), // Not clear to me that initializing an empty queue of peers prior to receiving them is smart or worthwhile.
 	}
-} 
+}
