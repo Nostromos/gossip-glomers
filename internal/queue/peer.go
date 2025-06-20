@@ -5,6 +5,9 @@ import (
 	"sync"
 	"time"
 
+	// --- Internal ---
+	// "maelstrom-broadcast/internal/gossip"
+
 	// --- Third Party ---
 	maelstrom "github.com/jepsen-io/maelstrom/demo/go"
 )
@@ -57,40 +60,3 @@ func (pq *Peer) Drain() []int {
 	return copy
 }
 
-func HandlePeerQueues(node *maelstrom.Node, pending map[string]*Peer) {
-	ticker := time.NewTicker(100 * time.Millisecond)
-
-	for range ticker.C {
-		for peerID, pq := range pending {
-			drainAndSend(node, peerID, pq)
-		}
-	}
-}
-
-func drainAndSend(node *maelstrom.Node, peer string, pq *Peer) {
-	batch := pq.Drain()
-
-	if len(batch) == 0 {
-		return
-	}
-	body := map[string]any{
-		"type":     "delta",
-		"messages": batch,
-	}
-	node.Send(peer, body)
-	pq.MU.Lock()
-	if pq.Timer != nil {
-		pq.Timer.Stop()
-	}
-	pq.Timer = time.AfterFunc(100*time.Millisecond, func() {
-		pq.MU.Lock()
-		for _, v := range batch {
-			pq.Values[v] = struct{}{}
-		}
-
-		pq.Timer = nil
-		pq.MU.Unlock()
-	})
-
-	pq.MU.Unlock()
-}
