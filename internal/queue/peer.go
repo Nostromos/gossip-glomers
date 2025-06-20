@@ -15,6 +15,12 @@ type Peer struct {
 	Timer  *time.Timer // want to store pointer to timer so if messages hang or drop we can resend
 }
 
+func NewPeerQueue() *Peer {
+	return &Peer{
+		Values: make(map[int]struct{}),
+	}
+}
+
 func (pq *Peer) Push(v int) bool {
 	pq.MU.Lock()
 	defer pq.MU.Unlock()

@@ -4,12 +4,12 @@ import (
 	"sync"
 )
 
-type Safe struct {
+type Messages struct {
 	MU     sync.RWMutex
 	Values map[int]struct{}
 }
 
-func (q *Safe) Add(v int) bool {
+func (q *Messages) Add(v int) bool {
 	q.MU.Lock()
 	defer q.MU.Unlock()
 
@@ -20,7 +20,7 @@ func (q *Safe) Add(v int) bool {
 	return true
 }
 
-func (q *Safe) Has(v int) bool {
+func (q *Messages) Has(v int) bool {
 	q.MU.RLock()
 	defer q.MU.RUnlock()
 
@@ -33,7 +33,7 @@ func (q *Safe) Has(v int) bool {
 	return false
 }
 
-func (q *Safe) Snapshot() []int {
+func (q *Messages) Snapshot() []int {
 	q.MU.RLock()
 	defer q.MU.RUnlock()
 
@@ -44,7 +44,7 @@ func (q *Safe) Snapshot() []int {
 	return out
 }
 
-func (q *Safe) Clear() {
+func (q *Messages) Clear() {
 	q.MU.Lock()
 	defer q.MU.Unlock()
 
