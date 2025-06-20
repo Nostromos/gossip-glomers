@@ -133,7 +133,7 @@ Structure & Naming:
   - [ ] Consider using channels for timer coordination
 
   Performance:
-  - [ ] Optimize Drain() to avoid double iteration
+  - [x] Optimize Drain() to avoid double iteration (*NOTE: Claude was wrong about this. There is only one iteration in drain.*)
   - [ ] Add batch size limits for large queues
   - [ ] Consider using sync.Pool for slice reuse
 
