@@ -53,9 +53,10 @@ func (s *intSet) GetSlice() []int {
 	return out
 }
 
+
 func (s *intSet) Clear() {
 	s.MU.Lock()
 	defer s.MU.Unlock()
-
+	
 	s.Values = make(map[int]struct{})
 }

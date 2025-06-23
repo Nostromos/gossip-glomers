@@ -22,14 +22,16 @@ type Server struct {
 	initOnce       sync.Once
 	GossipInterval time.Duration
 	RetryTimeout   time.Duration
+	GossipMax      int
 }
 
 func NewServer(n *maelstrom.Node) *Server {
 	return &Server{
-		Node: n,
-		Messages: queue.NewMessagesQueue(),
-		GossipInterval: 100 * time.Millisecond,
+		Node:           n,
+		Messages:       queue.NewMessagesQueue(),
+		GossipInterval: 50 * time.Millisecond,
 		RetryTimeout:   100 * time.Millisecond,
+		GossipMax:      128,
 	}
 }
 
@@ -38,16 +40,24 @@ func (s *Server) HandlePeerQueues() error {
 
 	for range ticker.C {
 		for peerID, pq := range s.Pending {
-			batch := pq.GetSlice()
-			if len(batch) == 0 { 
-				continue 
-			} else {
-				resp := protocol.DeltaReq{
-					Type: "delta",
-					Messages: batch,
-				}
-				s.Node.Send(peerID, resp)
+			
+			if pq.InFlight == nil {
+				batch := pq.DrainBatch(s.GossipMax)
+				pq.MU.Lock()
+				pq.InFlight = batch
+				pq.MU.Unlock()
+			} 
+
+			if len(pq.InFlight) == 0 {
+				continue
 			}
+
+			pq.MU.Lock()
+			s.Node.Send(peerID, protocol.DeltaReq{
+				Type:     "delta",
+				Messages: pq.InFlight,
+			})
+			pq.MU.Unlock()
 		}
 	}
 	return nil

@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	// --- Internal Lib ---
-	"maelstrom-broadcast/internal/queue"
 	"maelstrom-broadcast/internal/protocol"
+	"maelstrom-broadcast/internal/queue"
 
 	// --- Third Party ---
 	maelstrom "github.com/jepsen-io/maelstrom/demo/go"
@@ -38,7 +38,7 @@ func handle[T any](msg maelstrom.Message, fn func(T) error) error {
 func (s *Server) HandleEcho(msg maelstrom.Message) error {
 	return handle(msg, func(req protocol.EchoReq) error {
 		resp := protocol.EchoOK{Type: "echo_ok"}
-		return s.Node.Reply(msg, resp)	
+		return s.Node.Reply(msg, resp)
 	})
 }
 
@@ -49,9 +49,9 @@ func (s *Server) HandleGenerate(msg maelstrom.Message) error {
 		uid := fmt.Sprintf("%s_%d", s.Node.ID(), s.Counter.Add(1))
 		resp := protocol.GenerateOK{
 			Type: "generate_ok",
-			ID: uid, 
+			ID:   uid,
 		}
-	return s.Node.Reply(msg, resp)
+		return s.Node.Reply(msg, resp)
 	})
 }
 
@@ -61,8 +61,10 @@ func (s *Server) HandleGenerate(msg maelstrom.Message) error {
 func (s *Server) HandleBroadcast(msg maelstrom.Message) error {
 	return handle(msg, func(req protocol.BroadcastReq) error {
 		if s.Messages.Add(req.Message) {
-			for _, pq := range s.Pending {
-				pq.Add(req.Message)
+			for peer, pq := range s.Pending {
+				if peer != s.Node.ID() {
+					pq.Add(req.Message)
+				}
 			}
 		}
 		resp := protocol.BroadcastOK{
@@ -91,16 +93,21 @@ func (s *Server) HandleTopology(msg maelstrom.Message) error {
 	return handle(msg, func(req protocol.TopologyReq) error {
 		s.initOnce.Do(func() {
 			s.Pending = make(map[string]*queue.Peer)
+			
 			for _, peer := range s.Node.NodeIDs() {
 				if peer == s.Node.ID() {
 					continue
 				}
-				s.Pending[peer] = queue.NewPeerQueue()
+				pq := queue.NewPeerQueue()
+				for _, msg := range s.Messages.GetSlice() {
+					pq.Add(msg)
+				}
+				s.Pending[peer] = pq
 			}
 			go s.HandlePeerQueues()
 		})
 		resp := protocol.TopologyOK{
-			Type:        "topology_ok",
+			Type: "topology_ok",
 		}
 		return s.Node.Reply(msg, resp)
 	})
@@ -113,8 +120,12 @@ func (s *Server) HandleDelta(msg maelstrom.Message) error {
 	return handle(msg, func(req protocol.DeltaReq) error {
 		for _, v := range req.Messages {
 			if s.Messages.Add(v) {
-				for _, pq := range s.Pending {
-					pq.Add(v)
+				for peer, pq := range s.Pending {
+					if peer != s.Node.ID() {
+						if peer != msg.Src {
+							pq.Add(v)
+						}
+					}
 				}
 			}
 		}
@@ -133,7 +144,29 @@ func (s *Server) HandleDeltaOK(msg maelstrom.Message) error {
 	return handle(msg, func(req protocol.DeltaOK) error {
 		peerID := msg.Src // Maelstrom sets the sender ID here
 		if pq, ok := s.Pending[peerID]; ok {
-			pq.Clear()
+			pq.MU.Lock()
+			pq.InFlight = nil // Clear only the in-flight messages
+			pq.MU.Unlock()
+
+			next := pq.DrainBatch(s.GossipMax)
+
+			if len(next) == 0 {
+				for _, m := range s.Messages.GetSlice() {
+					pq.Add(m)
+				}
+				next = pq.DrainBatch(s.GossipMax)
+			}
+
+			if len(next) > 0 {
+				pq.MU.Lock()
+				pq.InFlight = next
+				pq.MU.Unlock()
+
+				s.Node.Send(peerID, protocol.DeltaReq{
+					Type:     "delta",
+					Messages: next,
+				})
+			}
 		}
 		return nil
 	})
