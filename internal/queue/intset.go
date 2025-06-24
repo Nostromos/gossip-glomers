@@ -58,7 +58,7 @@ func (s *intSet) Add(v int) bool {
 	s.MU.Lock()
 	defer s.MU.Unlock()
 
-	if s.Has(v) {
+	if _, exists := s.Values[v]; exists {
 		return false
 	}
 
