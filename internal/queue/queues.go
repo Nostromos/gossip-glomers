@@ -7,11 +7,11 @@ import "time"
 // timer-based retry logic for handling failed message transmissions.
 type Peer struct {
 	intSet
-	
+
 	// Timer manages retry timeouts for failed message transmissions
 	// Stores pointer to timer so messages can be resent if they hang or drop
 	Timer *time.Timer
-	
+
 	// InFlight tracks messages currently being transmitted to this peer
 	// Used for acknowledgment handling and retry logic
 	InFlight []int
@@ -22,6 +22,12 @@ type Peer struct {
 func NewPeerQueue() *Peer {
 	return &Peer{
 		intSet: newIntSet(),
+	}
+}
+
+func NewPeerQueueFromMap(baseSet map[int]struct{}) *Peer {
+	return &Peer{
+		intSet: newIntSetFromMap(baseSet),
 	}
 }
 
@@ -47,13 +53,12 @@ func (pq *Peer) DrainBatch(limit int) []int {
 		if count >= limit {
 			break
 		}
-
 		batch = append(batch, k)
 		delete(pq.Values, k)
 		count++
 	}
 	pq.MU.Unlock()
-	
+
 	return batch
 }
 

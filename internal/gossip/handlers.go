@@ -7,6 +7,7 @@ import (
 	// --- Standard Lib ---
 	"encoding/json"
 	"fmt"
+	"log"
 
 	// --- Internal Lib ---
 	"maelstrom-broadcast/internal/protocol"
@@ -26,10 +27,13 @@ import (
 //
 // Returns an error if unmarshaling fails or if the handler function returns an error.
 func handle[T any](msg maelstrom.Message, fn func(T) error) error {
+	log.Printf("DEBUG: handle called with message type %T", *new(T))
 	var req T
 	if err := json.Unmarshal(msg.Body, &req); err != nil {
+		log.Printf("DEBUG: JSON unmarshal failed: %v", err)
 		return err
 	}
+	log.Printf("DEBUG: JSON unmarshal succeeded, calling handler")
 	return fn(req)
 }
 
@@ -59,14 +63,22 @@ func (s *Server) HandleGenerate(msg maelstrom.Message) error {
 // If the message is new (not already seen), it's added to the global message set
 // and queued for gossip propagation to all peer nodes.
 func (s *Server) HandleBroadcast(msg maelstrom.Message) error {
+	log.Printf("DEBUG: HandleBroadcast received message %v", msg)
 	return handle(msg, func(req protocol.BroadcastReq) error {
+		log.Printf("DEBUG: Processing broadcast request %+v", req)
 		if s.Messages.Add(req.Message) {
-			for peer, pq := range s.Pending {
-				if peer != s.Node.ID() {
-					pq.Add(req.Message)
+			log.Printf("DEBUG: Added new message %d", req.Message)
+			if s.Pending != nil {
+				for peer, pq := range s.Pending {
+					if peer != s.Node.ID() {
+						pq.Add(req.Message)
+					}
 				}
 			}
+		} else {
+			log.Printf("DEBUG: Message %d already exists", req.Message)
 		}
+		log.Printf("DEBUG: About to send broadcast_ok")
 		resp := protocol.BroadcastOK{
 			Type: "broadcast_ok",
 		}
@@ -93,16 +105,17 @@ func (s *Server) HandleTopology(msg maelstrom.Message) error {
 	return handle(msg, func(req protocol.TopologyReq) error {
 		s.initOnce.Do(func() {
 			s.Pending = make(map[string]*queue.Peer)
-			
+
+			s.Messages.MU.RLock()
+			baseValues := s.Messages.Values
+			s.Messages.MU.RUnlock()
+
 			for _, peer := range s.Node.NodeIDs() {
 				if peer == s.Node.ID() {
 					continue
 				}
-				pq := queue.NewPeerQueue()
-				for _, msg := range s.Messages.GetSlice() {
-					pq.Add(msg)
-				}
-				s.Pending[peer] = pq
+
+				s.Pending[peer] = queue.NewPeerQueueFromMap(baseValues)
 			}
 			go s.HandlePeerQueues()
 		})

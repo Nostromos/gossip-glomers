@@ -39,6 +39,14 @@ func newIntSet() intSet {
 		Values: make(map[int]struct{}),
 	}
 }
+// newIntSetFromMap creates a new thread-safe integer set from a 
+func newIntSetFromMap(values map[int]struct{}) intSet {
+	copied := make(map[int]struct{}, len(values))
+	for k, v := range values {
+			copied[k] = v
+	}
+	return intSet{Values: copied}
+}
 
 // Has checks if the given integer exists in the set.
 // Uses write lock for simplicity, though read lock could be used here.

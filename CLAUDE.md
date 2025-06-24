@@ -11,13 +11,10 @@ This is a Go implementation of Fly.io's Gossip Glomers distributed systems chall
 ### Build and Run
 ```bash
 # Build the project
-go build -o gossip-glomers .
+go build -o ~/go/bin/maelstrom-broadcast cmd/main.go
 
-# Run directly without building binary
-go run .
-
-# Install/update dependencies
-go mod tidy
+# Run maelstrom
+ ./maelstrom/maelstrom/maelstrom test -w broadcast --bin ~/go/bin/maelstrom-broadcast --node-count 5 --time-limit 20 --rate 10 --nemesis partition
 ```
 
 ### Testing with Maelstrom
