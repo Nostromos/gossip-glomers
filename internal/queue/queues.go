@@ -32,19 +32,15 @@ func NewPeerQueue() *Peer {
 func (pq *Peer) DrainBatch(limit int) []int {
 	pq.MU.Lock()
 	defer pq.MU.Unlock()
-
 	if len(pq.Values) == 0 {
 		return nil
 	}
-
 	batchSize := limit
 	if len(pq.Values) < limit {
 		batchSize = len(pq.Values)
 	}
-
 	batch := make([]int, 0, batchSize)
 	count := 0
-
 	for k := range pq.Values {
 		if count >= limit {
 			break
@@ -54,7 +50,6 @@ func (pq *Peer) DrainBatch(limit int) []int {
 		delete(pq.Values, k)
 		count++
 	}
-
 	return batch
 }
 
