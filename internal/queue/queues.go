@@ -31,10 +31,12 @@ func NewPeerQueue() *Peer {
 // Returns nil if queue is empty, otherwise returns slice of message IDs.
 func (pq *Peer) DrainBatch(limit int) []int {
 	pq.MU.Lock()
-	defer pq.MU.Unlock()
+
 	if len(pq.Values) == 0 {
+		pq.MU.Unlock()
 		return nil
 	}
+
 	batchSize := limit
 	if len(pq.Values) < limit {
 		batchSize = len(pq.Values)
@@ -50,6 +52,8 @@ func (pq *Peer) DrainBatch(limit int) []int {
 		delete(pq.Values, k)
 		count++
 	}
+	pq.MU.Unlock()
+	
 	return batch
 }
 

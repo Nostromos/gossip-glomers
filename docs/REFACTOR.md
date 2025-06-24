@@ -128,13 +128,13 @@ Structure & Naming:
     - [x] Move DrainAndSend
 
   Concurrency Safety:
-  - [ ] Fix race condition in timer callback
-  - [ ] Simplify mutex usage patterns
+  - [x] Fix race condition in timer callback
+  - [x] Simplify mutex usage patterns
   - [ ] Consider using channels for timer coordination
 
   Performance:
   - [x] Optimize Drain() to avoid double iteration (*NOTE: Claude was wrong about this. There is only one iteration in drain.*)
-  - [ ] Add batch size limits for large queues
+  - [x] Add batch size limits for large queues
   - [ ] Consider using sync.Pool for slice reuse
 
   Maintainability:

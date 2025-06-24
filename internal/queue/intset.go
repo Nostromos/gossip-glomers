@@ -44,8 +44,8 @@ func newIntSet() intSet {
 // Uses write lock for simplicity, though read lock could be used here.
 // Returns true if the value exists, false otherwise.
 func (s *intSet) Has(v int) bool {
-	s.MU.Lock()
-	defer s.MU.Unlock()
+	s.MU.RLock()
+	defer s.MU.RUnlock()
 
 	_, exists := s.Values[v]
 	return exists
