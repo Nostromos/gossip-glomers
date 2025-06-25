@@ -14,7 +14,7 @@ This is a Go implementation of Fly.io's Gossip Glomers distributed systems chall
 go build -o ~/go/bin/maelstrom-broadcast cmd/main.go
 
 # Run maelstrom
- ./maelstrom/maelstrom/maelstrom test -w broadcast --bin ~/go/bin/maelstrom-broadcast --node-count 25 --time-limit 20 --rate 100 --latency 100
+./maelstrom/maelstrom/maelstrom test -w broadcast --bin ~/go/bin/maelstrom-broadcast --node-count 25 --time-limit 20 --rate 100 --latency 100
 ```
 
 ### Testing with Maelstrom
