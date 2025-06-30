@@ -111,6 +111,4 @@ Median latency is great, probably because we don't make any hops, and every node
 
 Max latency isn't horrible either - I was expecting worse. My gut tells me that if we reduce MPO, there's much less processing to be done and it'll be easier for nodes to "hear" updates, thus reducing all latencies. As an aside, whatever I do I need to ensure I"m keeping message lifecycles sub-500ms at least - we will introduce 100ms latency by default to reflect a more real-world environment. 
 
-
-
-
+$$
