@@ -29,7 +29,7 @@ This is my solution to [Fly.io's Gossip Glomers](https://fly.io/dist-sys/) distr
 ### Installation
 
 1. Clone the repository:
-   ```bash`
+   ```bash
    git clone https://github.com/Nostromos/murmur
    ```
    ```bash
