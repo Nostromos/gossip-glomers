@@ -31,6 +31,8 @@ This is my solution to [Fly.io's Gossip Glomers](https://fly.io/dist-sys/) distr
 1. Clone the repository:
    ```bash
    git clone https://github.com/Nostromos/gossip-glomers
+   ```
+   ```bash
    cd gossip-glomers
    ```
 
@@ -42,6 +44,8 @@ This is my solution to [Fly.io's Gossip Glomers](https://fly.io/dist-sys/) distr
 3. Download Maelstrom (if not already installed):
    ```bash
    wget https://github.com/jepsen-io/maelstrom/releases/download/v0.2.3/maelstrom.tar.bz2
+   ```
+   ```bash
    tar -xjf maelstrom.tar.bz2
    ```
 
@@ -60,19 +64,24 @@ Test various challenges:
 ```bash
 # Echo protocol
 ./maelstrom/maelstrom/maelstrom test -w echo --bin ~/go/bin/maelstrom-broadcast --node-count 1 --time-limit 10
-
+```
+```bash
 # Unique ID generation
 ./maelstrom/maelstrom/maelstrom test -w unique-ids --bin ~/go/bin/maelstrom-broadcast --time-limit 30 --rate 1000 --node-count 3 --availability total --nemesis partition
-
+```
+```bash
 # Broadcast (single-node)
 ./maelstrom/maelstrom/maelstrom test -w broadcast --bin ~/go/bin/maelstrom-broadcast --node-count 1 --time-limit 20 --rate 10
-
+```
+```bash
 # Broadcast (multi-node)
 ./maelstrom/maelstrom/maelstrom test -w broadcast --bin ~/go/bin/maelstrom-broadcast --node-count 5 --time-limit 20 --rate 10
-
+```
+```bash
 # Broadcast with network partitions
 ./maelstrom/maelstrom/maelstrom test -w broadcast --bin ~/go/bin/maelstrom-broadcast --node-count 5 --time-limit 20 --rate 10 --nemesis partition
-
+```
+```bash
 # Stress test
 ./maelstrom/maelstrom/maelstrom test -w broadcast --bin ~/go/bin/maelstrom-broadcast --node-count 25 --time-limit 20 --rate 100 --latency 100
 ```
@@ -160,7 +169,8 @@ Run tests and view results:
 ```bash
 # Run test
 ./maelstrom/maelstrom/maelstrom test -w broadcast --bin ~/go/bin/maelstrom-broadcast --node-count 5 --time-limit 20
-
+```
+```bash
 # View results
 open store/latest/index.html
 ```
