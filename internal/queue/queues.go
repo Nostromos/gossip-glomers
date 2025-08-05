@@ -15,6 +15,8 @@ type Peer struct {
 	// InFlight tracks messages currently being transmitted to this peer
 	// Used for acknowledgment handling and retry logic
 	InFlight []int
+
+	LastOK *time.Time
 }
 
 // NewPeerQueue creates a new peer queue with initialized thread-safe integer set.

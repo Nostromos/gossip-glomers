@@ -98,6 +98,28 @@ func (s *Server) HandleRead(msg maelstrom.Message) error {
 	})
 }
 
+// Internal hash. map of which nodes are reachable
+// Health check - in topology, property on each peer node last readok received, if older than some value/threshhold
+// ex. could be some X number of messages in a row
+// exponential backoffs - 
+// - [ ] TODO: Study jitter - some randomness of delay to prevent or mitigate thundering herd random value between 0 & X and add to backoff
+// For each readOK received, update peer with time
+// Leader election, one node declares itself a leader, sends that message to nodes in topology. If another node doesn't have a leader, 
+// N^2 problelm
+// - [ ] TODO: Review RAFT & SWIM consensus approaches
+// All non-leader nodes just need to check if leader is alive or not. Leader is the only one sending broadcast messages.
+// - Leader maintains topology of nodes it knows of. Leader sends out healthy/unhealthy node lists so they're not wasting ops sending to unhealthy messages
+// Resolving duplicate leaders - The leader that knows the most is the leader as partitions resolve
+// - Some cutoff for ignoring the message. More recent messages should take precedence
+// - Consider topology comparisons vs knowledge comparisons
+// 
+// ViewStamp Replication & VectorClock. - logical clocks used for understanding time when there are multiple nodes. Each node has a concept of passing time, no single source of truth for system, rather using monotonic clock as source for itself. 
+
+// - [ ] Topology needs peer health indicator. implement
+// - [ ] Implement exponential backoffs
+
+
+
 // HandleTopology initializes the gossip network topology.
 // Sets up peer queues for all other nodes and starts the background gossip loop.
 // Uses sync.Once to ensure initialization happens only once per server instance.
