@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://fly.io/blog/gossip-glomers/assets/gossip-glomers.webp" alt="Gossip Glomers by Fly.io" />
 </p>
-<h1 align="center"><i>Gossip Glomers</i></h1>
+<h1 align="center"><i>Murmur</i></h1>
 
 <p align="center">
   <a>
@@ -17,7 +17,7 @@
 
 ## Overview
 
-This is my solution to [Fly.io's Gossip Glomers](https://fly.io/dist-sys/) distributed systems challenges. The project implements various distributed protocols including echo, unique ID generation, broadcast, and gossip protocols using the Maelstrom testing framework.
+This is my solution to [Fly.io's Gossip Glomers](https://fly.io/dist-sys/) distributed systems challenges. Murmur implements various distributed protocols including echo, unique ID generation, broadcast, and gossip using the Maelstrom testing framework.
 
 ## Getting Started
 
@@ -29,11 +29,11 @@ This is my solution to [Fly.io's Gossip Glomers](https://fly.io/dist-sys/) distr
 ### Installation
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/Nostromos/gossip-glomers
+   ```bash`
+   git clone https://github.com/Nostromos/murmur
    ```
    ```bash
-   cd gossip-glomers
+   cd murmur
    ```
 
 2. Install dependencies:
@@ -89,7 +89,7 @@ Test various challenges:
 ## Project Structure
 
 ```
-gossip-glomers/
+murmur/
 ├── cmd/
 │   └── main.go              # Main entry point
 ├── internal/
